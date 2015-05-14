@@ -17,9 +17,8 @@ class MyStreamer(TwythonStreamer):
             # Print tweet to logs
             print data['text'].encode('utf-8')
             # Need to check is the tweet from the person being tracked, so a command? 
-            print data
             print "id_to_track=",id_to_track
-            ttwython.send_direct_message(screen_name=id_to_track, text=data['text'].encode('utf-8'))
+            ttwython.send_direct_message(screen_name=id_to_track, text="twitter.com/sjwomble/status/",data['id_str'])
 
     def on_error(self, status_code, data):
         print status_code
