@@ -70,7 +70,7 @@ heroku config:add APP_KEY=$consumerkey \
     OAUTH_TOKEN=$accesstoken \
     OAUTH_TOKEN_SECRET=$accesstokensecret \
     TWITTER_ID=$twitterid \
-    TWITTER_ID=$twitterid_dm
+    TWITTER_ID_DM=$twitterid_dm
 
 #create a script for setting up your local environment
 cat <<EOF > setup_env.sh
