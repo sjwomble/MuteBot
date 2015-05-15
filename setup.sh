@@ -8,7 +8,7 @@
 # You only get ONE free dyn with Heroku. 
 
 echo "Twitter Mute Bot"
-echo -n "Enter a name - (Suggestion <your_twitter_id>_MUTEBOT "
+echo -n "Enter a name - (Suggestion <your_twitter_id>_PBBOT "
 read botname
 
 echo -e "\ninitializing git repo"
@@ -43,9 +43,10 @@ while [ $confirmed_creds != "y" ]; do
     read accesstokensecret
     echo -n "User this is to be installed for (Example: \"sjwomble\", no @: "
     read twitterid
-    echo -n "User to DM tweets that initiated a mute or block to? (Example: \"sjwomble\", no @: "
-    echo -n "This can be your account, or an alt you've set up to monitor potentially abusive tweets, even a friend willing to check them. "
-    echo -n "If you are being dogpiled, you might want to turn off notifications for DMs for yours or the alt account! "
+    echo "User to DM tweets that initiated a mute or block to? (Example: \"sjwomble\", no @: "
+    echo "This can be your account, or an alt you've set up to monitor potentially abusive tweets, even a friend willing to check them. "
+    echo "If you are being dogpiled, you might want to turn off notifications for DMs for yours or the alt account! "
+    echo -n "Twitter id for DMs (Example: \"sjwomble\", no @: "
     read twitterid_dm
 
     echo "We read these credentials:"
@@ -95,7 +96,7 @@ heroku ps:scale worker=1
 #echo -e "\nWaiting for DB to start\n"
 #heroku pg:wait
 
-echo -e "done! your mute bot should now be running on heroku.\n type heroku logs --tail to make sure."
+echo -e "done! your bot should now be running on heroku.\n type heroku logs --tail to make sure."
 
 # If you have a verified heroku account (Have added a credit card), install this useful addon. Can be ran after setup.
 # Allows tables to be viewed / inspected to see who is blocked/muted
