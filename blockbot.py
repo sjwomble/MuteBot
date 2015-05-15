@@ -10,11 +10,6 @@ from twython import Twython, TwythonError, TwythonStreamer
 # DB init
 # DB clear down
 # delete from the_table where the_timestamp < now() - interval '30 days'
-    
-# Start timer
-start_time = time.time()
-ids_blocked = []
-ids_muted = []
 
 # Streaming class for Twython, infinite loop so all the work needs to be done from here!
 class MyStreamer(TwythonStreamer):
@@ -50,43 +45,52 @@ def handleCommand(tweet):
 def handleTweet(tweet_json):
     print "Potential tweet to handle",tweet_json['text']
     # Only get friends list every 10 mins or it will seriously slow down blocking any dogpiles etc...
-    global my_friends
-    my_friends = getFriends(my_friends)
+    the_friends = getFriends()
     #If friend then do nothing, otherwise block or mute (Or nothing if bot is off
-    if tweet_json['user']['id_str'] not in my_friends:  
+    if tweet_json['user']['id_str'] not in the_friends:  
         mute_block_off = os.getenv('MUTE_BLOCK_OFF')
         msg = ""
         if mute_block_off == "block":
             if tweet_json['user']['id_str'] not in ids_blocked:  
                 ttwython.create_block(user_id=tweet_json['user']['id_str'])
                 # Not ideal as it will only track from start. TODO: put ids blocked by bot into a DB table
-                global ids_blocked
                 ids_blocked.append(tweet_json['user']['id_str'])
+                print "Pushed ",tweet_json['user']['id_str']," into blocks, num in list =",len(ids_blocked)
                 ttwython.send_direct_message(screen_name=id_to_dm, text="Blocked twitter.com/sjwomble/status/"+tweet_json['id_str'])
         elif mute_block_off == "mute":
             if tweet_json['user']['id_str'] not in ids_muted:  
                 # Mute built in API call missing for some reason, hence call to post
                 ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
-                global ids_muted
                 ids_muted.append(tweet_json['user']['id_str'])
+                print "Pushed ",tweet_json['user']['id_str']," into mutes, num in list =",len(ids_muted)
                 # Send the message   
                 ttwython.send_direct_message(screen_name=id_to_dm, text="Muted twitter.com/sjwomble/status/"+tweet_json['id_str'])
+        else:
+            print "Personal block bot off, no action taken"
+    else:
+        print "Tweet from friend, no action taken"
         
 
-def getFriends(friends):
+def getFriends():
     end_time = time.time()
     global start_time
+    global my_friends
     print "Time elapsed =", end_time - start_time
     # If 10 minutes since last check then get followers. Don't want to do each time or it will run out of API calls and slow down block/mute
-    if end_time - start_time > 600:
+    if end_time - start_time > 600 or len(my_friends) == 0:
         # Get follower ids... NB ONLY WORKS FOR <5000 followers! TODO: Fix ... 
-       friends = [str(id) for id in ttwython.get_friends_ids()['ids']] 
+       my_friends = [str(id) for id in ttwython.get_friends_ids()['ids']] 
        start_time = time.time()
-       print "reset time, friends reloaded"
+       print "reset timer, friends - ",len(my_friends)," reloaded"
     
-    return friends   
+    return my_friends   
  
 if __name__ == '__main__':
+    # Start timer
+    global start_time 
+    global ids_blocked 
+    global ids_muted
+    global my_friends
     # Get details of the application you created as part of the bot process
     APP_KEY = os.getenv('APP_KEY') 
     APP_SECRET = os.getenv('APP_SECRET')
@@ -100,7 +104,7 @@ if __name__ == '__main__':
     os.environ["MUTE_BLOCK_OFF"] = "mute"
 	
     print "Initialising personal block bot for: ",id_to_track
-        
+    start_time = time.time()
     # twitter object for sending DMs / muting / blocking
     ttwython = Twython(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
     
@@ -110,11 +114,14 @@ if __name__ == '__main__':
     # Arrays for people blocked and muted. TODO: Store to DB and recover from there. 
     # Will also not pick up manual blocks and mutes as only runs at startup
     ids_blocked = [str(id) for id in ttwython.list_block_ids()['ids']]
+    print "Found ",len(ids_blocked)," blocks, added to list"
     #No mute API call! Have to do manually ... 
     ids_muted = [str(id) for id in ttwython.get("mutes/users/ids")['ids']]
+    print "Found ",len(ids_muted)," mutes, added to list"
     # Get friends
-    my_friends = [str(id) for id in ttwython.get_friends_ids()['ids']]                                                      
-
+    my_friends = []
+    getFriends()
+    
     # Start the streamer...
     stream = MyStreamer(APP_KEY, APP_SECRET,
                     OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
