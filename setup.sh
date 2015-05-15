@@ -7,7 +7,7 @@
 # NB: If you have completed the tutorial remember to delete the example application before trying to install this one
 # You only get ONE free dyn with Heroku. 
 
-echo "Twitter Mute Bot"
+echo "Twitter Personal Block Bot"
 echo -n "Enter a name - (Suggestion <your_twitter_id>_PBBOT "
 read botname
 
