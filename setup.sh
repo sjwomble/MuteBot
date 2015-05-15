@@ -43,6 +43,10 @@ while [ $confirmed_creds != "y" ]; do
     read accesstokensecret
     echo -n "User this is to be installed for (Example: \"sjwomble\", no @: "
     read twitterid
+    echo -n "User to DM tweets that initiated a mute or block to? (Example: \"sjwomble\", no @: "
+    echo -n "This can be your account, or an alt you've set up to monitor potentially abusive tweets, even a friend willing to check them. "
+    echo -n "If you are being dogpiled, you might want to turn off notifications for DMs for yours or the alt account! "
+    read twitterid_dm
 
     echo "We read these credentials:"
     cat <<EOF
@@ -51,6 +55,7 @@ APP_SECRET=$consumersecret
 OAUTH_TOKEN=$accesstoken
 OAUTH_TOKEN_SECRET=$accesstokensecret
 TWITTER_ID=$twitterid
+TWITTER_ID_DM=$twitterid_dm
 EOF
     echo "Is this correct? [y/n]"
     read confirmed_creds
@@ -64,6 +69,7 @@ heroku config:add APP_KEY=$consumerkey \
     OAUTH_TOKEN=$accesstoken \
     OAUTH_TOKEN_SECRET=$accesstokensecret \
     TWITTER_ID=$twitterid
+    TWITTER_ID=$twitterid_dm
 
 #create a script for setting up your local environment
 cat <<EOF > setup_env.sh
@@ -72,6 +78,7 @@ export APP_SECRET=$consumersecret
 export OAUTH_TOKEN=$accesstoken
 export OAUTH_TOKEN_SECRET=$accesstokensecret
 export TWITTER_ID=$twitterid
+export TWITTER_ID_DM=$twitterid_dm
 EOF
 
 
