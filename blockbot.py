@@ -16,11 +16,11 @@ class MyStreamer(TwythonStreamer):
     def on_success(self, data):
         if 'text' in data:
             # Print tweet to logs
-            print data['text'].encode('utf-8')
+            print data['text'].encode('ascii','ignore') 
             # Need to check is the tweet from the person being tracked and @'ing themselves, so a command? 
             if data['text'].startswith("@"+id_to_track) & data['user']['screen_name'].startswith(id_to_track):
                 # is a connand message
-                handleCommand(data['text'])
+                handleCommand(data['text'].encode('ascii','ignore'))
             else: 
                 # Potential person to block
                 handleTweet(data)
