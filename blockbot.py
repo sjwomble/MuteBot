@@ -43,7 +43,7 @@ def handleCommand(tweet):
         os.environ["MUTE_BLOCK_OFF"] = "block"
                 
 def handleTweet(tweet_json):
-    print "Potential tweet to handle",tweet_json['text']
+    print "Potential tweet to handle",tweet_json['text'].encode('ascii','ignore')
     # Only get friends list every 10 mins or it will seriously slow down blocking any dogpiles etc...
     the_friends = getFriends()
     #If friend then do nothing, otherwise block or mute (Or nothing if bot is off
