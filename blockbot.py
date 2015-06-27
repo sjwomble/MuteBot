@@ -52,7 +52,12 @@ def handleTweet(tweet_json):
         msg = ""
         if mute_block_off == "block":
             if tweet_json['user']['id_str'] not in ids_blocked:  
-                ttwython.create_block(user_id=tweet_json['user']['id_str'])
+                try:
+                    ttwython.create_block(user_id=tweet_json['user']['id_str'])
+                except TwythonError as e:
+                    print e
+                    # retry ... usually works second time!
+                    ttwython.create_block(user_id=tweet_json['user']['id_str'])
                 # Not ideal as it will only track from start. TODO: put ids blocked by bot into a DB table
                 ids_blocked.append(tweet_json['user']['id_str'])
                 print "Pushed ",tweet_json['user']['id_str']," into blocks, num in list =",len(ids_blocked)
@@ -60,7 +65,12 @@ def handleTweet(tweet_json):
         elif mute_block_off == "mute":
             if tweet_json['user']['id_str'] not in ids_muted:  
                 # Mute built in API call missing for some reason, hence call to post
-                ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
+                try:
+                    ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
+                except TwythonError as e:
+                    print e
+                    # retry ... usually works second time!
+                    ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
                 ids_muted.append(tweet_json['user']['id_str'])
                 print "Pushed ",tweet_json['user']['id_str']," into mutes, num in list =",len(ids_muted)
                 # Send the message   
@@ -78,10 +88,17 @@ def getFriends():
     print "Time elapsed =", end_time - start_time
     # If 10 minutes since last check then get followers. Don't want to do each time or it will run out of API calls and slow down block/mute
     if end_time - start_time > 600 or len(my_friends) == 0:
-        # Get follower ids... NB ONLY WORKS FOR <5000 followers! TODO: Fix ... 
-       my_friends = [str(id) for id in ttwython.get_friends_ids()['ids']] 
-       start_time = time.time()
-       print "reset timer, friends - ",len(my_friends)," reloaded"
+        # Get follower ids... NB ONLY WORKS FOR <150000 friends ... You are not following that many people, right? 
+        # Obviously slower the more people you are following, especially more blocks of 5K 
+        next_cursor=-1
+        my_friends =[]
+        while(next_cursor):
+            following = twitter.get_friends_ids(cursor = next_cursor)
+            for id in following['ids']:    
+                my_friends.append(str(id))
+            next_cursor = following['next_cursor']
+        start_time = time.time()
+        print "reset timer, friends - ",len(my_friends)," reloaded"
     
     return my_friends   
  
@@ -113,10 +130,18 @@ if __name__ == '__main__':
     
     # Arrays for people blocked and muted. TODO: Store to DB and recover from there. 
     # Will also not pick up manual blocks and mutes as only runs at startup
-    ids_blocked = [str(id) for id in ttwython.list_block_ids()['ids']]
+    next_cursor=-1
+    while(next_cursor):
+        ids_blocked = twitter.list_block_ids(cursor = next_cursor)
+        for id in ids_blocked['ids']:    
+            ids_blocked.append(str(id))
+            next_cursor = ids_blocked['next_cursor']
+    
     print "Found ",len(ids_blocked)," blocks, added to list"
-    #No mute API call! Have to do manually ... 
+    
+    #No mute API call! Have to do manually ... Works up to 5K mutes, not sure how to pass next_curse - TODO: fix
     ids_muted = [str(id) for id in ttwython.get("mutes/users/ids")['ids']]
+
     print "Found ",len(ids_muted)," mutes, added to list"
     # Get friends
     my_friends = []
