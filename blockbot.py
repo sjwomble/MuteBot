@@ -93,7 +93,7 @@ def getFriends():
         next_cursor=-1
         my_friends =[]
         while(next_cursor):
-            following = twitter.get_friends_ids(cursor = next_cursor)
+            following = ttwython.get_friends_ids(cursor = next_cursor)
             for id in following['ids']:    
                 my_friends.append(str(id))
             next_cursor = following['next_cursor']
