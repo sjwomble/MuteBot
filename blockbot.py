@@ -130,6 +130,7 @@ if __name__ == '__main__':
     
     # Arrays for people blocked and muted. TODO: Store to DB and recover from there. 
     # Will also not pick up manual blocks and mutes as only runs at startup
+    ids_blocked =[]
     next_cursor=-1
     while(next_cursor):
         ids = ttwython.list_block_ids(cursor = next_cursor)
