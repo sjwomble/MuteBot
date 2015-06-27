@@ -132,7 +132,7 @@ if __name__ == '__main__':
     # Will also not pick up manual blocks and mutes as only runs at startup
     next_cursor=-1
     while(next_cursor):
-        ids_blocked = twitter.list_block_ids(cursor = next_cursor)
+        ids_blocked = ttwython.list_block_ids(cursor = next_cursor)
         for id in ids_blocked['ids']:    
             ids_blocked.append(str(id))
             next_cursor = ids_blocked['next_cursor']
