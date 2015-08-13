@@ -57,7 +57,10 @@ def handleTweet(tweet_json):
                 except TwythonError as e:
                     print e
                     # retry ... usually works second time!
-                    ttwython.create_block(user_id=tweet_json['user']['id_str'])
+                    try:
+                        ttwython.create_block(user_id=tweet_json['user']['id_str'])
+                    except TwythonError as e:
+                        print e
                 # Not ideal as it will only track from start. TODO: put ids blocked by bot into a DB table
                 ids_blocked.append(tweet_json['user']['id_str'])
                 print "Pushed ",tweet_json['user']['id_str']," into blocks, num in list =",len(ids_blocked)
@@ -70,7 +73,10 @@ def handleTweet(tweet_json):
                 except TwythonError as e:
                     print e
                     # retry ... usually works second time!
-                    ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
+                    try:
+                        ttwython.post("mutes/users/create",params=dict(user_id=tweet_json['user']['id_str']))
+                    except TwythonError as e:
+                        print e
                 ids_muted.append(tweet_json['user']['id_str'])
                 print "Pushed ",tweet_json['user']['id_str']," into mutes, num in list =",len(ids_muted)
                 # Send the message   
@@ -93,7 +99,13 @@ def getFriends():
         next_cursor=-1
         my_friends =[]
         while(next_cursor):
-            following = ttwython.get_friends_ids(cursor = next_cursor)
+            #Error where idle for a long while this fails, so return list but don't reset start time so next tweet it tries immediately
+            try:
+                following = ttwython.get_friends_ids(cursor = next_cursor)
+            except TwythonError as e:
+                    print e
+                    return my_friends 
+                
             for id in following['ids']:    
                 my_friends.append(str(id))
             next_cursor = following['next_cursor']
@@ -137,11 +149,15 @@ if __name__ == '__main__':
         for id in ids['ids']:    
             ids_blocked.append(str(id))
             next_cursor = ids['next_cursor']
+    # Add yourself, stops error where the bot tries to block your own id!
+    ids_blocked.append(str(twitter_num_id))
     
     print "Found ",len(ids_blocked)," blocks, added to list"
     
     #No mute API call! Have to do manually ... Works up to 5K mutes, not sure how to pass next_curse - TODO: fix
     ids_muted = [str(id) for id in ttwython.get("mutes/users/ids")['ids']]
+     # Add yourself, stops error where the bot tries to mute your own id!
+    ids_muted.append(str(twitter_num_id))
 
     print "Found ",len(ids_muted)," mutes, added to list"
     # Get friends
