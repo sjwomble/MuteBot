@@ -22,12 +22,15 @@ class MyStreamer(TwythonStreamer):
                 # is a connand message
                 handleCommand(data['text'].encode('ascii','ignore'))
             else: 
-                # Potential person to block
-                handleTweet(data)
+                # Potential person to block - check not a RT f
+                if 'retweeted_status' in data:
+                    print "An RT, do nothing",data['text'].encode('ascii','ignore')
+                else:
+                    handleTweet(data)
 
     def on_error(self, status_code, data):
         print "ERROR: ",status_code
-	# Add some alerting to the user here - email etc so they can restart the app in Heroku, if needed? Should restart itself... 
+	# TODO: Add some alerting to the user here - email etc so they can restart the app in Heroku, if needed? Should restart itself... 
 
 # Commands include : (Only works when you @ yourself, so not likely to be triggered by accidenct!) 
 #    PersonalBotOff (Won't mute or block any more
